@@ -70,8 +70,19 @@ function ensurePinnedWorkspace() {
   }
 }
 
-// Random ID generator. Just so workspace IDs don't collide.
-function wsId() { return "ws_" + Math.random().toString(36).slice(2, 10); }
+// Unique workspace ID generator. Two workspaces sharing an id is catastrophic:
+// every `find(w => w.id === X)` returns the FIRST match, so a second workspace
+// with a duplicate id silently mirrors the first one's tabs in the UI (the
+// "tabs duplicated across workspaces" bug). A bare Math.random() slice can, in
+// rare cases, repeat. Combining a monotonic counter, a timestamp, and a random
+// suffix makes a collision impossible within a session and astronomically
+// unlikely across sessions.
+let wsIdCounter = 0;
+function wsId() {
+  wsIdCounter += 1;
+  return "ws_" + Date.now().toString(36) + "_" + wsIdCounter.toString(36)
+       + "_" + Math.random().toString(36).slice(2, 8);
+}
 
 // Top-level mutable state. Loaded once on startup, then mutated in place.
 let state = null;
@@ -144,10 +155,20 @@ async function reconcileWithBrowser() {
   }
 
   // Step 1 — clean out dead tab IDs and rebuild the tab→workspace lookup.
+  // A tab must belong to exactly one workspace. If saved state somehow lists
+  // the same tab id in two workspaces (a crash mid-move, an older buggy build),
+  // it would show up — and stay visible — in both, the "tabs duplicated across
+  // workspaces" bug. We enforce single membership here: the first workspace to
+  // claim a live tab keeps it; later workspaces drop it. `claimed` also guards
+  // against the same id appearing twice within one workspace's list.
   const newIndex = {};
+  const claimed = new Set();
   for (const ws of state.workspaces) {
-    ws.tabIds = ws.tabIds.filter(id => liveIds.has(id));
-    for (const id of ws.tabIds) newIndex[id] = { workspaceId: ws.id };
+    ws.tabIds = ws.tabIds.filter(id => liveIds.has(id) && !claimed.has(id));
+    for (const id of ws.tabIds) {
+      claimed.add(id);
+      newIndex[id] = { workspaceId: ws.id };
+    }
   }
   state.tabIndex = newIndex;
 

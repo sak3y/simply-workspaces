@@ -327,6 +327,11 @@ input { font: inherit; color: inherit; }
 
 .creator-name {
   flex: 1;
+  /* Flex items default to min-width:auto, which keeps a text input at its
+     intrinsic (~20 char) width and refuses to shrink. In the narrow sidebar
+     pane that overflows .creator-row and gets clipped by the surrounding
+     overflow:hidden. min-width:0 lets the input shrink to fit the pane. */
+  min-width: 0;
   padding: 7px 10px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);

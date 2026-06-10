@@ -31,7 +31,16 @@
 
   const PALETTE = ["#ef4444", "#f59e0b", "#10b981", "#06b6d4", "#6366f1", "#a855f7", "#ec4899", "#14b8a6"];
   function pickColor(seed) { return PALETTE[seed % PALETTE.length]; }
-  function wsId() { return "ws_" + Math.random().toString(36).slice(2, 10); }
+  // Collision-proof workspace id (mirrors background.js). Two workspaces sharing
+  // an id make every `find(w => w.id === X)` resolve to the first, so the second
+  // row mirrors the first's tabs — the "tabs duplicated across workspaces" bug.
+  // Counter + timestamp + random rules that out.
+  let wsIdCounter = 0;
+  function wsId() {
+    wsIdCounter += 1;
+    return "ws_" + Date.now().toString(36) + "_" + wsIdCounter.toString(36)
+         + "_" + Math.random().toString(36).slice(2, 8);
+  }
 
   // Synthetic tab-id source. Seeded high to avoid colliding with anything.
   let fakeTabSeq = 1000;
