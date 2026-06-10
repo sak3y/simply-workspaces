@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+  Workspace — popup / sidebar HTML
+
+  Loaded by both:
+    • the toolbar popup  (browser_action default_popup)
+    • the sidebar pane   (sidebar_action default_panel + ?context=sidebar)
+
+  All UI state and behavior live in sidebar.js. Most of the markup below is
+  empty containers — sidebar.js fills #list with workspace rows, etc.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Workspace</title>
+  <link rel="stylesheet" href="sidebar.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- The list of workspace rows. sidebar.js renders these. -->
+    <main class="list" id="list" tabindex="0"></main>
+
+    <!-- Bottom button that opens the "create workspace" form. -->
+    <button class="new-btn" id="newBtn">
+      <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+        <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+      <span>New Workspace</span>
+    </button>
+
+    <!-- The "create workspace" form, hidden by default. Shown when the user
+         clicks the New Workspace button or picks Edit from a right-click menu. -->
+    <section class="creator" id="creator" hidden>
+      <div class="creator-row">
+        <!-- Live preview of the chosen icon. -->
+        <button class="creator-icon-btn" id="creatorIconBtn" type="button" aria-label="Selected icon"></button>
+        <!-- Workspace name input. -->
+        <input class="creator-name" id="creatorName" type="text" placeholder="New Workspace" autocomplete="off" spellcheck="false" />
+      </div>
+
+      <!-- Two tabs at the top of the picker: Icon / Emoji. -->
+      <div class="creator-tabs" role="tablist">
+        <button class="creator-tab active" id="tabIcon" data-mode="icon" role="tab">Icon</button>
+        <button class="creator-tab" id="tabEmoji" data-mode="emoji" role="tab">Emoji 😀</button>
+      </div>
+
+      <!-- The grid of icons or emojis to pick from. Only one is visible at a time. -->
+      <div class="creator-grid" id="iconGrid"></div>
+      <div class="creator-grid emoji-grid" id="emojiGrid" hidden></div>
+
+      <div class="creator-actions">
+        <button class="btn primary" id="createBtn">Create</button>
+        <button class="btn" id="cancelBtn">Cancel</button>
+      </div>
+    </section>
+
+    <!-- Floating context menu. Position and contents are filled by JS. -->
+    <div class="ctx-menu" id="ctxMenu" hidden></div>
+  </div>
+
+  <!-- Local fallback backend. Only does anything when the page runs WITHOUT
+       the extension runtime (plain web page); harmless inside the extension. -->
+  <script src="local-backend.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

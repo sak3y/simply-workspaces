@@ -1,0 +1,89 @@
+/* ============================================================
+   Workspace — userChrome.css
+   ============================================================
+
+   This file hides Firefox UI elements that the extension cannot
+   suppress through the WebExtension API:
+
+   1. The "all tabs" dropdown arrow at the end of the tab strip
+      that Firefox auto-shows when an extension hides tabs.
+   2. (Optional) The native horizontal tab strip itself.
+
+   ============================================================
+   HOW TO INSTALL (one-time setup):
+
+   1. Open about:config in Firefox.
+   2. Search for: toolkit.legacyUserProfileCustomizations.stylesheets
+   3. Set it to: true
+
+   4. Find your profile folder:
+      - Open about:profiles
+      - Click "Open Folder" next to "Root Directory" of the
+        profile you're using.
+
+   5. Inside that folder, create a folder named: chrome
+      (lowercase, no extension)
+
+   6. Copy this file (userChrome.css) into that chrome folder.
+
+   7. Restart Firefox.
+
+   ============================================================
+   To revert: delete the file and restart Firefox.
+   ============================================================ */
+
+/* --- 1. Hide the "all tabs" dropdown arrow on the tab strip --- */
+/* This appears at the right end of the tab bar when extensions
+   hide tabs. We never want to use it because the extension
+   manages tab visibility itself. */
+
+#alltabs-button {
+  display: none !important;
+}
+
+/* Also hide the "X tabs are hidden" notification doorhanger.
+   Firefox flashes this every time tabs are hidden. */
+#tab-notifications-box,
+.tab-hidden-notification,
+.notification-anchor-icon[data-extensionid] {
+  display: none !important;
+}
+
+
+/* --- 1b. Style Firefox's native sidebar header ---
+   The bar above the panel ("Workspaces" title + the × close button)
+   is Firefox chrome, not part of the extension, so it can only be
+   restyled from here. */
+
+/* Make the "Workspaces" title smaller. */
+#sidebar-header #sidebar-title,
+#sidebar-header .sidebar-panel-header-title,
+#sidebar-title {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* Show a pointer cursor when hovering the × close button (and the
+   header switcher), instead of the default arrow. Selectors cover
+   both classic (pre-136) and revamped sidebar markup. */
+#sidebar-close,
+#sidebar-header .close-icon,
+#sidebar-switcher-target,
+.sidebar-close-button,
+toolbarbutton[part="close-button"] {
+  cursor: pointer !important;
+}
+
+
+/* --- 2. (OPTIONAL) Hide the native horizontal tab strip ---
+   Uncomment the block below if you want a fully Vivaldi-style
+   look with no horizontal tabs at all. */
+
+/*
+#TabsToolbar {
+  visibility: collapse !important;
+}
+#tabbrowser-tabs {
+  visibility: collapse !important;
+}
+*/

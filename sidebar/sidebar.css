@@ -1,0 +1,487 @@
+/* ============================================================================
+ * Workspace — popup / sidebar styles
+ * ============================================================================
+ *
+ * Both the toolbar popup and the sidebar pane load this same stylesheet.
+ *
+ *  - In popup mode: html/body width is 280px, height is content-sized.
+ *  - In sidebar mode: a `.in-sidebar` class is added to <body> by sidebar.js
+ *    and overrides at the bottom of this file make it fill the pane.
+ *
+ * Colors all live in the :root block as CSS variables. Edit them there to
+ * change the entire theme — don't search-and-replace hex codes throughout.
+ * ============================================================================
+ */
+
+/* The HTML `hidden` attribute should always win. Without this rule, a class
+ * that sets `display: flex` would override `<div hidden>`. */
+[hidden] { display: none !important; }
+
+/* ---------- design tokens ---------- */
+/* All colors and timing values are defined here so the rest of the file can
+ * reference them by name. Change a value here and it propagates everywhere. */
+:root {
+  /* Backgrounds. We keep --bg-rgb separate so we can build rgba() variants. */
+  --bg-rgb: 26, 26, 29;
+  --bg: rgb(var(--bg-rgb));
+  --bg-elevated: #232328;        /* slightly lighter — used for pickers, fields */
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 140, 66, 0.18);  /* the orange tint behind active workspace */
+
+  /* Borders. */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Text colors, lightest to darkest. */
+  --text: #e6e7eb;
+  --text-muted: #8a8e96;
+  --text-faint: #5e616a;
+
+  /* Accent (orange). --accent-text-on is for text drawn ON the accent color. */
+  --accent: #ff8c42;
+  --accent-hover: #ffa15c;
+  --accent-soft: rgba(255, 140, 66, 0.18);
+  --accent-text-on: #1a0d05;
+
+  /* Shared transitions/shadow. */
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- base resets ---------- */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  /* No min-width floor: the Firefox sidebar pane can be narrower than the
+     popup, and a floor here (combined with overflow:hidden) clips the right
+     edge off — including the New Workspace button. The popup gets a concrete
+     width below; the sidebar stays fluid. */
+  min-width: 0;
+  background: rgb(var(--bg-rgb));
+  color: var(--text);
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Toolbar popup (loaded WITHOUT ?context=sidebar): Firefox sizes the popup to
+   the body, so give it a comfortable fixed width. The sidebar pane overrides
+   this to fill its width (see body.in-sidebar). */
+body:not(.in-sidebar) { width: 280px; }
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input { font: inherit; color: inherit; }
+
+.app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: rgb(var(--bg-rgb));
+  overflow: hidden;
+}
+
+/* ---------- workspace list ---------- */
+
+.list {
+  flex: 1;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px 6px 2px;
+  outline: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.list::-webkit-scrollbar { width: 8px; }
+.list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+.ws {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin: 1px 0;
+  cursor: pointer;
+  position: relative;
+  transition: background 90ms var(--ease);
+}
+.ws:hover { background: var(--bg-hover); }
+
+.ws.active {
+  background: var(--bg-active);
+  cursor: default;
+}
+.ws.active::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 5px; bottom: 5px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(255, 140, 66, 0.55);
+}
+
+.ws-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--text);
+}
+.ws.active .ws-icon { color: var(--accent); }
+
+.ws-icon .emoji {
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* ---------- text-icon (base) ---------- */
+
+.text-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.ws.active .ws-icon .text-icon {
+  background: var(--accent);
+  color: var(--accent-text-on);
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(255, 140, 66, 0.40);
+  transition: background 100ms var(--ease), color 100ms var(--ease), border-color 100ms var(--ease);
+}
+
+/* ---------- info ---------- */
+
+.ws-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws.active .ws-name {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ws-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.ws-rename-input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.ws-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.ws-grip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 100ms var(--ease);
+  flex: 0 0 auto;
+  cursor: grab;
+}
+.ws:hover .ws-grip { opacity: 1; }
+.ws.active .ws-grip { display: none; }
+
+/* drag */
+.ws.dragging { opacity: 0.4; }
+
+/* Drop indicator: a single flat insertion line in the gap between rows.
+   We draw it as an absolutely-positioned bar (not an inset shadow) so it
+   stays a straight line instead of following the row's 6px rounded corners. */
+.ws.drop-before::after,
+.ws.drop-after::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(255, 140, 66, 0.6);
+  pointer-events: none;
+}
+.ws.drop-before::after { top: -2px; }
+.ws.drop-after::after  { bottom: -2px; }
+
+/* Divider between the permanent (pinned) workspace and the editable ones. */
+.ws-sep {
+  height: 1px;
+  margin: 7px 6px;
+  background: var(--border-strong);
+}
+
+/* ---------- new workspace button ---------- */
+
+.new-btn {
+  margin: 4px 8px 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 16px);
+  transition: all 120ms var(--ease);
+  cursor: pointer;
+}
+.new-btn:hover {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ---------- creator ---------- */
+
+.creator {
+  border-top: 1px solid var(--border);
+  padding: 10px;
+  background: rgba(var(--bg-rgb), 0.6);
+  animation: slide-in 160ms var(--ease);
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.creator-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.creator-icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  transition: background 100ms var(--ease);
+  overflow: hidden;
+  cursor: pointer;
+}
+.creator-icon-btn:hover { background: rgba(255, 140, 66, 0.28); }
+.creator-icon-btn .emoji { font-size: 18px; line-height: 1; }
+.creator-icon-btn svg { width: 22px; height: 22px; }
+.creator-icon-btn .text-icon {
+  background: var(--accent);
+  color: var(--accent-text-on);
+  border: 0;
+  border-radius: 0;
+  font-size: 14px;
+}
+
+.creator-name {
+  flex: 1;
+  padding: 7px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  font-size: 12.5px;
+  transition: border-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.creator-name::placeholder { color: var(--text-faint); }
+.creator-name:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.creator-tabs {
+  display: flex;
+  background: var(--bg-elevated);
+  border-radius: 6px;
+  padding: 2px;
+  margin-bottom: 8px;
+}
+.creator-tab {
+  flex: 1;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 4px;
+  color: var(--text-muted);
+  text-align: center;
+  transition: background 100ms var(--ease), color 100ms var(--ease);
+  cursor: pointer;
+}
+.creator-tab:hover { color: var(--text); }
+.creator-tab.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  cursor: default;
+}
+
+.creator-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  margin-bottom: 10px;
+  max-height: 168px;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.grid-item {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  color: var(--text-muted);
+  font-size: 18px;
+  transition: all 80ms var(--ease);
+  cursor: pointer;
+}
+.grid-item:hover { background: var(--bg-hover); color: var(--text); }
+.grid-item.selected {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.creator-actions {
+  display: flex; gap: 6px; justify-content: flex-end;
+}
+
+.btn {
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  transition: background 100ms var(--ease), color 100ms var(--ease);
+  cursor: pointer;
+}
+.btn:hover { background: var(--bg-hover); }
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-text-on);
+}
+.btn.primary:hover { background: var(--accent-hover); }
+
+/* ---------- context menu ---------- */
+
+.ctx-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 200px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  font-size: 12px;
+  animation: ctx-pop 100ms var(--ease);
+}
+@keyframes ctx-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.ctx-item {
+  display: flex; align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  color: var(--text);
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.ctx-item:hover { background: var(--bg-active); color: var(--accent); }
+.ctx-item.danger:hover { background: var(--accent-soft); color: var(--accent); }
+.ctx-sep { height: 1px; margin: 4px 6px; background: var(--border); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 4px; }
+.ws:focus-visible { outline-offset: -2px; }
+
+/* ---------- sidebar pane context ---------- */
+/* When loaded into Firefox's sidebar pane (sidebar.html?context=sidebar),
+   sidebar.js adds .in-sidebar to <body>. We then fill the whole pane:
+   width 100%, height 100vh, and the workspace list grows to push the
+   New Workspace button to the bottom. */
+
+body.in-sidebar {
+  width: 100%;
+  min-width: 0;
+  height: 100vh;
+}
+body.in-sidebar .app {
+  height: 100vh;
+}
+body.in-sidebar .list {
+  flex: 1;
+  max-height: none;
+}
+
+/* ---------- sidebar pane context ---------- */
+/* Body becomes transparent so the empty area below the popup content blends
+   with Firefox's panel background. The .app keeps its own dark bg as a
+   self-contained card at the top of the pane. */
+
+body.in-sidebar {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body.in-sidebar .app {
+  background: rgba(var(--bg-rgb), 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}

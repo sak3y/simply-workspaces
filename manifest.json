@@ -1,0 +1,67 @@
+{
+  "manifest_version": 2,
+  "name": "Workspace",
+  "version": "0.3.0",
+  "description": "Vivaldi-style workspaces for Firefox.",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "panel-tabs@local.dev",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+
+  "permissions": [
+    "tabs",
+    "tabHide",
+    "tabGroups",
+    "storage",
+    "menus"
+  ],
+
+  "background": {
+    "scripts": ["background/background.js"],
+    "persistent": false
+  },
+
+  "browser_action": {
+    "default_title": "Workspaces",
+    "default_popup": "sidebar/sidebar.html",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg"
+    }
+  },
+
+  "sidebar_action": {
+    "default_title": "Workspaces",
+    "default_panel": "sidebar/sidebar.html?context=sidebar",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg"
+    }
+  },
+
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": { "default": "Ctrl+Shift+E" },
+      "description": "Open the workspace switcher"
+    },
+    "next-workspace": {
+      "suggested_key": { "default": "Ctrl+Alt+Right" },
+      "description": "Switch to next workspace"
+    },
+    "prev-workspace": {
+      "suggested_key": { "default": "Ctrl+Alt+Left" },
+      "description": "Switch to previous workspace"
+    }
+  },
+
+  "icons": {
+    "48": "icons/icon-48.svg",
+    "96": "icons/icon-96.svg"
+  }
+}

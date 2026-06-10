@@ -1,0 +1,5 @@
+# Persistent Firefox dev profile created by dev-run.ps1 (web-ext)
+.ff-dev-profile/
+
+# web-ext build output
+web-ext-artifacts/
