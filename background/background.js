@@ -263,14 +263,47 @@ async function applyWorkspaceVisibility() {
     }
   }
 
-  // Step 3 — hide the rest, one at a time. Re-query first because the world
-  // may have changed while we were awaiting the activation above.
+  // Step 3 — hide every tab not in the active workspace.
+  //
+  // The tricky part: Firefox silently refuses to hide the ACTIVE tab, and the
+  // active state can lag the activation we did in step 2 — so the tab we just
+  // switched away from is still reported active and gets skipped, leaking into
+  // the new workspace. (This was the "tabs from the previous workspace appear
+  // in the newly-created one" bug.) We therefore retry: each pass re-focuses a
+  // tab that genuinely belongs here, then hides the rest. A straggler that was
+  // still active on one pass gets hidden on the next.
   if (toHide.length) {
-    const fresh = await browser.tabs.query({ currentWindow: true });
-    const stillToHide = fresh.filter(t => !activeIds.has(t.id) && !t.active && !t.hidden).map(t => t.id);
-    for (const id of stillToHide) {
-      try { await browser.tabs.hide(id); }
-      catch (e) { console.error("[Workspace] tabs.hide failed for tab", id, ":", e); }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const fresh = await browser.tabs.query({ currentWindow: true });
+      const stragglers = fresh.filter(t => !activeIds.has(t.id) && !t.hidden);
+      if (!stragglers.length) break;
+
+      // If a tab we need to hide is still the active one, focus a real member
+      // of the active workspace first so it can be hidden on this pass.
+      const activeStraggler = stragglers.find(t => t.active);
+      if (activeStraggler && toShow.length) {
+        const focusId = (active.lastActiveTabId && toShow.includes(active.lastActiveTabId))
+          ? active.lastActiveTabId
+          : toShow[0];
+        try { await browser.tabs.update(focusId, { active: true }); }
+        catch (e) { console.error("[Workspace] tabs.update refocus failed:", e); }
+      }
+
+      for (const t of stragglers) {
+        if (t.active) continue; // can't hide the active tab; next pass handles it
+        try { await browser.tabs.hide(t.id); }
+        catch (e) { console.error("[Workspace] tabs.hide failed for tab", t.id, ":", e); }
+      }
+    }
+
+    // Post-condition check: anything still visible that doesn't belong here is
+    // a genuine leak (e.g. a pinned/about: tab Firefox won't hide). Log it
+    // loudly so the cause is unambiguous instead of a silent visual bug.
+    const after = await browser.tabs.query({ currentWindow: true });
+    const leaked = after.filter(t => !activeIds.has(t.id) && !t.hidden);
+    if (leaked.length) {
+      console.warn("[Workspace] LEAK: these tabs stayed visible but don't belong to",
+        active.name, "->", leaked.map(t => ({ id: t.id, active: t.active, pinned: t.pinned, url: t.url })));
     }
   }
 
