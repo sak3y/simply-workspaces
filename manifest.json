@@ -1,12 +1,12 @@
 {
   "manifest_version": 2,
-  "name": "Workspace",
+  "name": "Simply Workspaces",
   "version": "0.3.0",
-  "description": "Vivaldi-style workspaces for Firefox.",
+  "description": "Vivaldi-style tab workspaces for Firefox. Group tabs into separate spaces and switch between them from a side panel.",
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "panel-tabs@local.dev",
+      "id": "simply-workspaces@musawer360.dev",
       "strict_min_version": "115.0",
       "data_collection_permissions": {
         "required": ["none"]
